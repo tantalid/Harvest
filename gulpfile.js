@@ -1,7 +1,7 @@
 //initialize all of our variables
-var app, base, concat, directory, gulp, gutil, hostname, path, refresh, sass, uglify, imagemin, minifyCSS, del, browserSync, autoprefixer, gulpSequence, shell, sourceMaps, plumber;
+var app, base, concat, directory, gulp, gutil, hostname, path, sass, uglify, imagemin, cssnano, del, browserSync, autoprefixer, gulpSequence, shell, sourceMaps, plumber;
 
-var autoPrefixBrowserList = ['last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'];
+var autoPrefixBrowserList = ['last 2 version'];
 
 //load all of our dependencies
 //add more here if you want to include more libraries
@@ -12,12 +12,25 @@ uglify      = require('gulp-uglify');
 sass        = require('gulp-sass');
 sourceMaps  = require('gulp-sourcemaps');
 imagemin    = require('gulp-imagemin');
-minifyCSS   = require('gulp-minify-css');
+cssnano   = require('gulp-cssnano');
 browserSync = require('browser-sync');
 autoprefixer = require('gulp-autoprefixer');
 gulpSequence = require('gulp-sequence').use(gulp);
 shell       = require('gulp-shell');
 plumber     = require('gulp-plumber');
+
+var jadeInheritance = require('gulp-jade-inheritance');
+var jade = require('gulp-jade');
+
+gulp.task('jade-inheritance', function() {
+  gulp.src('app/jade/*.jade')
+    .pipe(jadeInheritance({basedir: 'app/jade/'}))
+    .pipe(jade({
+      pretty: true
+    }))
+    .pipe(gulp.dest('app'))
+    .pipe(browserSync.reload({stream: true}));
+});
 
 gulp.task('browserSync', function() {
     browserSync({
@@ -132,7 +145,7 @@ gulp.task('styles-deploy', function() {
                 }))
                 //the final filename of our combined css file
                 .pipe(concat('styles.css'))
-                .pipe(minifyCSS())
+                .pipe(cssnano())
                 //where to save our final, compressed css file
                 .pipe(gulp.dest('dist/styles'));
 });
@@ -203,7 +216,8 @@ gulp.task('default', ['browserSync', 'scripts', 'styles'], function() {
     gulp.watch('app/scripts/src/**', ['scripts']);
     gulp.watch('app/styles/scss/**', ['styles']);
     gulp.watch('app/images/**', ['images']);
-    gulp.watch('app/*.html', ['html']);
+    //gulp.watch('app/*.html', ['html']);
+    gulp.watch('app/jade/**/*.jade', ['jade-inheritance']);
 });
 
 //this is our deployment task, it will set everything for deployment-ready files
